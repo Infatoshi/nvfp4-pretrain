@@ -1,0 +1,42 @@
+# nvfp4-pretrain — single config for a training run.
+# Run:  uv run train.py            (uses ./config.yaml)
+#       uv run train.py my.yaml    (use a different config)
+
+precision: nvfp4            # bf16 | fp8 | nvfp4
+
+nvfp4:                      # only used when precision == nvfp4
+  amortize: true           # cache the per-step weight quantization
+  cutlass: true            # use the tuned CUTLASS sm_120 GEMM (256x128 Coop); false -> cuBLAS
+  fused_ct: true           # fused SMEM cast-transpose-quant kernel for the wgrad operands
+  naive: false             # ablation: original slow pure-torch wgrad path
+
+fp8:                       # only used when precision == fp8
+  recipe: tensorwise       # tensorwise (recommended) | rowwise
+
+optimizer:
+  name: muon               # adamw | adamw8bit | muon
+  lr: 6.0e-4               # base LR for AdamW / the non-Muon param groups
+  muon_lr: 0.01            # Muon LR for the 2D block weights (sharp optimum ~0.01)
+
+model:
+  dim: 2048
+  layers: 12
+  heads: 16
+  kv_heads: 8              # GQA
+  seq_len: 512
+  batch_size: 32
+
+train:
+  steps: 200000            # cosine schedule length — set near the real budget so LR anneals
+  warmup: 300
+  grad_accum: 1
+  compile: true
+
+data:
+  path: /home/infatoshi/data/owt   # dir with train.bin / val.bin (GPT-2 BPE, nanoGPT format)
+
+log:
+  every: 100
+  tag: run
+  traj: runs/traj.jsonl    # incremental loss curve (survives a killed run)
+  out: runs/result.jsonl

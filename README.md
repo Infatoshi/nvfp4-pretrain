@@ -41,16 +41,30 @@ results/           figures + jsonl
 ## Hardware / stack
 RTX PRO 6000 Blackwell Workstation (sm_120, cc 12.0, 96 GB GDDR7, ~1.8 TB/s). torch 2.11+cu130, torchao 0.17, triton 3.6, CUDA 13.2, CUTLASS 4.5. The CUTLASS GEMM needs a local CUTLASS checkout (external dependency, not vendored).
 
-## Quickstart (sketch)
+## Quickstart (UV)
+Everything is driven by one **`config.yaml`** — precision, optimizer, model, training — so you
+never touch `NVFP4_CUDA` / `FP8` / `MUON` / ... by hand.
+
 ```bash
-pip install -r requirements.txt           # torch, torchao, bitsandbytes, triton, matplotlib
-# BF16 / FP8 / NVFP4 are env-selected on the trainer:
-cd scaling
-python train_text.py --dim 1024 --nl 6 --bs 16 --T 512 --steps 1000     # bf16
-FP8=1 python train_text.py ...                                          # fp8 (torchao)
-NVFP4_CUDA=1 NVFP4_AMORTIZE=1 NVFP4_CUTLASS=1 MUON=1 MUON_LR=0.01 python train_text.py ...  # nvfp4 + tuned CUTLASS + Muon
+uv sync                 # creates the env from pyproject.toml + uv.lock (torch cu130 index)
+uv run train.py         # trains using ./config.yaml
+uv run train.py my.yaml # ... or a different config
 ```
-(JIT-builds the CUDA/CUTLASS extensions on first import; needs `CUDA_HOME=/usr/local/cuda-13`, `unset LD_PRELOAD`, and an OpenWebText `.bin` à la nanoGPT.)
+
+`config.yaml` (excerpt):
+```yaml
+precision: nvfp4         # bf16 | fp8 | nvfp4
+nvfp4: { cutlass: true, amortize: true, fused_ct: true }
+optimizer: { name: muon, lr: 6.0e-4, muon_lr: 0.01 }
+model: { dim: 2048, layers: 12, heads: 16, kv_heads: 8, seq_len: 512, batch_size: 32 }
+train: { steps: 200000, warmup: 300, compile: true }
+data:  { path: /path/to/owt }   # tokenized OWT bins (see scaling/prepare_data.py)
+```
+
+**Prerequisite:** the NVFP4/CUTLASS kernels JIT-compile at first run against the **system CUDA 13
+toolkit** — needs `nvcc` on PATH and `CUDA_HOME=/usr/local/cuda-13` (sm_120a). A local CUTLASS
+checkout is required for the GEMM (external, not vendored). Prepare an OpenWebText `.bin` à la
+nanoGPT with `scaling/prepare_data.py`.
 
 ## Honest caveats
 - Single GPU only; no multi-GPU / FSDP.

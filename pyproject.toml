@@ -1,0 +1,36 @@
+[project]
+name = "nvfp4-pretrain"
+version = "0.1.0"
+description = "4-bit/8-bit LLM pretraining on a single consumer Blackwell GPU (RTX PRO 6000, sm_120)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch==2.11.0",
+    "torchao==0.17.0",
+    "bitsandbytes>=0.43",
+    "triton>=3.0",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pyyaml",
+    "tiktoken",
+    "datasets",
+]
+
+# Run with:  uv run train.py [config.yaml]
+
+# torch + the FP4/FP8 stack come from the CUDA 13.0 wheel index.
+# NOTE: the NVFP4/CUTLASS kernels JIT-compile at runtime and need the *system* CUDA 13
+# toolkit (nvcc) on PATH with CUDA_HOME=/usr/local/cuda-13 — uv manages the python deps,
+# the toolkit is a system prerequisite (sm_120a).
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv]
+# the runtime CUDA extensions need nvcc; don't isolate build envs from system CUDA
+no-build-isolation-package = ["bitsandbytes"]

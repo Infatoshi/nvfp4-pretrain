@@ -11,3 +11,6 @@ cutlass_gemm/nvfp4_gemm_*[0-9]
 *.ncu-rep
 /data/
 *.bin
+.venv/
+runs/
+smoke*.yaml
