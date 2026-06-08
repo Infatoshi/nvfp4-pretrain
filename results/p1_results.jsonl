@@ -1,0 +1,3 @@
+{"tag": "bf16", "backend": "bf16", "dim": 2048, "nl": 6, "N": 276850688, "tokens": 2048000, "val_loss": 6.2140988945961, "steps": 250, "minutes": 0.5924175182978312}
+{"tag": "fp8", "backend": "fp8", "dim": 2048, "nl": 6, "N": 276850688, "tokens": 2048000, "val_loss": 6.21978297829628, "steps": 250, "minutes": 0.7503654797871907}
+{"tag": "nvfp4", "backend": "nvfp4", "dim": 2048, "nl": 6, "N": 276850688, "tokens": 2048000, "val_loss": 6.228201401233673, "steps": 250, "minutes": 1.0056549986203511}

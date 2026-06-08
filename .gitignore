@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.so
+*.o
+*.bak*
+*.log
+# compiled CUTLASS executables (tile-named, no extension)
+cutlass_gemm/nvfp4_gemm_*[0-9]
+*.nsys-rep
+*.sqlite
+*.ncu-rep
+/data/
+*.bin
